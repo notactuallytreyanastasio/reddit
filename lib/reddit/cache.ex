@@ -78,7 +78,7 @@ defmodule Reddit.Cache do
 
   @impl true
   def init(_) do
-    table = :ets.new(@table_name, [:set, :protected, :named_table, read_concurrency: true])
+    table = :ets.new(@table_name, [:set, :public, :named_table, read_concurrency: true])
     schedule_cleanup()
     {:ok, %{table: table}}
   end

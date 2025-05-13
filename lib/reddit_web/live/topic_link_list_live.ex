@@ -11,11 +11,19 @@ defmodule RedditWeb.TopicLinkListLive do
 
     topic = Content.get_topic_by_slug(slug)
 
-    {:ok,
-     socket
-     |> assign(:topic, topic)
-     |> assign(:page_title, "#{topic.name} Links")
-     |> assign(:links, Content.list_links_by_topic_slug(slug))}
+    if topic do
+      {:ok,
+       socket
+       |> assign(:topic, topic)
+       |> assign(:page_title, "#{topic.name} Links")
+       |> assign(:links, Content.list_links_by_topic_slug(slug))}
+    else
+      # Handle the case when topic is not found
+      {:ok,
+       socket
+       |> put_flash(:error, "Topic not found")
+       |> redirect(to: ~p"/")}
+    end
   end
 
   @impl true

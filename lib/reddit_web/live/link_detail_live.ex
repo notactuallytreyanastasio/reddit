@@ -7,20 +7,29 @@ defmodule RedditWeb.LinkDetailLive do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    link = Content.get_link_with_comments!(id)
+    # Use try/rescue to handle the case when the link is not found
+    try do
+      link = Content.get_link_with_comments!(id)
 
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Reddit.PubSub, "comments:#{id}:new")
+      if connected?(socket) do
+        Phoenix.PubSub.subscribe(Reddit.PubSub, "comments:#{id}:new")
+      end
+
+      {:ok,
+       socket
+       |> assign(:page_title, link.title)
+       |> assign(:link, link)
+       |> assign(:comments, link.comments)
+       |> assign(:comment_changeset, Content.change_comment(%Comment{}))
+       |> assign(:username, "")
+       |> assign(:parent_comment_id, nil)}
+    rescue
+      Ecto.NoResultsError ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Link not found")
+         |> redirect(to: ~p"/")}
     end
-
-    {:ok,
-     socket
-     |> assign(:page_title, link.title)
-     |> assign(:link, link)
-     |> assign(:comments, link.comments)
-     |> assign(:comment_changeset, Content.change_comment(%Comment{}))
-     |> assign(:username, "")
-     |> assign(:parent_comment_id, nil)}
   end
 
   @impl true
